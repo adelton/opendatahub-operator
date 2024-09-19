@@ -15,10 +15,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        component:
-          - components/notebook-controller
-          - components/odh-notebook-controller
 
     steps:
       - uses: actions/checkout@v4
@@ -26,8 +22,8 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           check-latest: true
-          go-version-file: ${{ matrix.component }}/go.mod
-          cache-dependency-path: ${{ matrix.component }}/go.sum
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
 
       - name: golangci-lint
         if: "${{ !cancelled() }}"
@@ -36,7 +32,6 @@ jobs:
           args: --timeout=5m
           version: v1.59.1
           only-new-issues: true
-          working-directory: ${{ matrix.component }}
 
       # additional checks not part of golangci-lint
 
@@ -44,7 +39,6 @@ jobs:
       - name: go mod verify
         if: "${{ !cancelled() }}"
         run: go mod verify
-        working-directory: ${{ matrix.component }}
 
       # https://github.com/golang/go/issues/27005
       - name: go mod tidy -diff
@@ -60,17 +54,12 @@ jobs:
             git diff
             exit 1
           fi
-        working-directory: ${{ matrix.component }}
 
   govulncheck:
     name: govulncheck
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        component:
-          - components/notebook-controller
-          - components/odh-notebook-controller
 
     steps:
       - uses: actions/checkout@v4
@@ -79,7 +68,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: stable
-          cache-dependency-path: ${{ matrix.component }}/go.sum
+          cache-dependency-path: go.sum
 
       # https://go.googlesource.com/vuln
       - name: govulncheck
@@ -88,4 +77,3 @@ jobs:
           go install golang.org/x/vuln/cmd/govulncheck@latest
           go mod tidy
           $(go env GOPATH)/bin/govulncheck ./...
-        working-directory: ${{ matrix.component }}
